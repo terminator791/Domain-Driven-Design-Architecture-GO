@@ -31,4 +31,15 @@ var (
 	ErrRefundAmountExceedsCapture = errors.New("refund amount exceeds captured amount")
 	ErrPaymentNotFound          = errors.New("payment not found")
 	ErrPaymentMethodNotFound    = errors.New("payment method not found")
+	
+	// Promotion specific errors
+	ErrPromotionNotFound        = errors.New("promotion not found")
+	ErrPromotionNotValid        = errors.New("promotion is not valid or active")
+	ErrPromotionAlreadyActive   = errors.New("promotion is already active")
+	ErrInvalidPromotionStatus   = errors.New("invalid promotion status for operation")
+	ErrInvalidDateRange         = errors.New("invalid date range")
+	ErrCouponNotFound           = errors.New("coupon not found")
+	ErrCouponAlreadyUsed        = errors.New("coupon has already been used")
+	ErrCouponExpired            = errors.New("coupon has expired")
+	ErrCouponCodeExists         = errors.New("coupon code already exists")
 )

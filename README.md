@@ -1,41 +1,75 @@
-# Domain-Driven Design (DDD) Order Management System in Go
+# Enterprise E-commerce Domain-Driven Design (DDD) System in Go
 
-This project demonstrates a complete implementation of **Domain-Driven Design (DDD)** principles using Go, built as an Order Management System API. It showcases the core DDD concepts while maintaining clean architecture and separation of concerns.
+This project demonstrates a comprehensive implementation of **Domain-Driven Design (DDD)** principles using Go, built as an enterprise-level e-commerce system. It showcases advanced DDD concepts, CQRS, event sourcing principles, and complex business domains while maintaining clean architecture and separation of concerns.
 
-## 🏗️ Architecture Overview
+## 🏗️ Enterprise Architecture Overview
 
-The project follows a layered architecture aligned with DDD principles:
+The project follows a sophisticated layered architecture with multiple bounded contexts:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Presentation Layer                       │
-│  (HTTP Handlers, Routes, Middleware)                       │
-├─────────────────────────────────────────────────────────────┤
-│                    Application Layer                        │
-│  (Use Cases, Commands, Handlers, DTOs)                     │
-├─────────────────────────────────────────────────────────────┤
-│                      Domain Layer                           │
-│  (Entities, Value Objects, Domain Services, Repositories)  │
-├─────────────────────────────────────────────────────────────┤
-│                   Infrastructure Layer                      │
-│  (Database, Repositories, Configuration)                   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           Presentation Layer                               │
+│   (HTTP Handlers, Routes, Middleware, WebAPI Controllers)                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                          Application Layer                                 │
+│   (CQRS Bus, Commands, Queries, Handlers, Read Models, DTOs)              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                   Multiple Domain Bounded Contexts                         │
+│  ┌─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐  │
+│  │   Order     │   Cart      │ Inventory   │  Payment    │ Promotion   │  │
+│  │   Domain    │   Domain    │   Domain    │   Domain    │   Domain    │  │
+│  └─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘  │
+│  (Entities, Value Objects, Domain Services, Events, Aggregates)            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                        Infrastructure Layer                                │
+│  (Repositories, Database, Event Store, External APIs, Messaging)           │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## 🎯 DDD Concepts Implemented
+## 🎯 Enterprise DDD Concepts Implemented
 
-### 1. **Ubiquitous Language**
-- **Order**: A customer's request for one or more products
-- **OrderItem**: Individual products within an order with quantities
-- **Customer**: The person placing orders
-- **Product**: Items available for purchase
-- **OrderStatus**: Current state of an order (PENDING, CONFIRMED, SHIPPED, etc.)
+### 1. **Multiple Bounded Contexts**
+- **Order Management**: Order lifecycle, status tracking, fulfillment
+- **Shopping Cart**: Session-based cart management, item persistence, expiry
+- **Inventory Management**: Stock levels, reservations, low-stock alerts
+- **Payment Processing**: Multi-method payments, authorization/capture, refunds
+- **Promotion Engine**: Coupons, discounts, promotional campaigns
 
-### 2. **Bounded Context**
-- **Order Management Context**: Handles order creation, updates, and tracking
-- Clear boundaries between Order, Product, and Customer domains
+### 2. **Advanced Ubiquitous Language**
 
-### 3. **Domain Layer Components**
+#### Order Context
+- **Order**: Customer's purchase request with multiple items
+- **OrderItem**: Individual products with quantities and pricing
+- **OrderStatus**: PENDING → CONFIRMED → SHIPPED → DELIVERED
+
+#### Cart Context  
+- **Cart**: Session-based shopping container with expiry
+- **CartItem**: Products added to cart with real-time pricing
+- **CartStatus**: ACTIVE → ABANDONED → CHECKED_OUT → EXPIRED
+
+#### Inventory Context
+- **InventoryItem**: Stock tracking with available/reserved quantities  
+- **StockReservation**: Temporary stock allocation with expiry
+- **AlertLevel**: NONE → LOW → CRITICAL → OUT_OF_STOCK
+
+#### Payment Context
+- **Payment**: Financial transaction with authorization flow
+- **PaymentMethod**: Customer's stored payment instruments
+- **PaymentStatus**: PENDING → AUTHORIZED → CAPTURED → REFUNDED
+
+#### Promotion Context
+- **Promotion**: Marketing campaigns with business rules
+- **Coupon**: Individual discount codes with usage tracking
+- **DiscountValue**: Percentage or fixed amount discounts
+
+### 3. **Advanced Domain Patterns**
+
+#### **Complex Aggregates**
+- **Order Aggregate**: Order + OrderItems + Domain Events
+- **Cart Aggregate**: Cart + CartItems + Business Rules  
+- **Payment Aggregate**: Payment + Refunds + Status Transitions
+- **Promotion Aggregate**: Promotion + Coupons + Usage Tracking
+- **Inventory Aggregate**: InventoryItem + Reservations + Alerts
 
 #### **Entities** (`internal/domain/*/entity.go`)
 - **Order**: Aggregate root containing order items and business logic
@@ -43,53 +77,104 @@ The project follows a layered architecture aligned with DDD principles:
 - **Product**: Entity representing products in the catalog
 - **Customer**: Entity representing customers
 
-#### **Value Objects** (`internal/domain/order/value_objects.go`)
-- **OrderID, ProductID, CustomerID**: Strongly-typed identifiers
-- **Money**: Represents monetary values with currency
-- **Quantity**: Represents item quantities with validation
-- **OrderStatus**: Enumerated order states
+#### **Rich Value Objects**
+- **Money**: Currency-aware monetary calculations
+- **StockLevel**: Available/Reserved/Total quantity tracking  
+- **DiscountValue**: Percentage and fixed amount discounts
+- **ReservationID, PaymentID, CartID**: Strong typing for identifiers
+- **PaymentStatus, CartStatus, AlertLevel**: Enumerated states with business rules
 
-#### **Aggregates**
-- **Order Aggregate**: Order (root) + OrderItems
-- Ensures consistency boundaries and invariants
+#### **Domain Services** 
+- **OrderDomainService**: Complex order validation and pricing
+- **CartDomainService**: Cart lifecycle and business rules
+- **InventoryDomainService**: Stock reservation and replenishment
+- **PromotionEngine**: Discount calculation and coupon validation
 
-#### **Domain Services** (`internal/domain/order/service.go`)
-- **OrderDomainService**: Complex business logic that doesn't belong to entities
-- Validates order creation rules
-- Calculates discounts and totals
+#### **Domain Events & Event Sourcing**
+- **OrderCreatedEvent, PaymentCapturedEvent**: Business significant events
+- **CartAbandonedEvent, StockReservedEvent**: Cross-domain communication
+- **PromotionAppliedEvent, LowStockAlertEvent**: Business process triggers
+- Event-driven architecture for loose coupling
 
-#### **Domain Events**
-- **OrderCreatedEvent**: Published when an order is created
-- **OrderUpdatedEvent**: Published when order status changes
+#### **Repository Patterns**
+- Abstract persistence interfaces without infrastructure coupling
+- Separate read/write models for CQRS optimization
+- Event sourcing capabilities for audit trail
 
-#### **Repository Interfaces** (`internal/domain/*/repository.go`)
-- Abstract data access without coupling to infrastructure
-- Follows Repository pattern
+### 4. **CQRS (Command Query Responsibility Segregation)**
 
-### 4. **Application Layer** (`internal/application/order/`)
+#### **Command Side - Write Models** (`internal/application/cqrs/commands/`)
+- **CreateOrderCommand**: Order creation with validation
+- **AddToCartCommand**: Cart item management  
+- **ProcessPaymentCommand**: Payment processing workflow
+- **UpdateInventoryCommand**: Stock level adjustments
 
-#### **Commands and Handlers**
-- **CreateOrderRequest/Handler**: Creates new orders
-- **UpdateOrderStatusRequest/Handler**: Updates order status
-- **GetOrderHandler**: Retrieves order information
+#### **Query Side - Read Models** (`internal/application/readmodels/`)
+- **OrderReadModel**: Optimized order views with customer data
+- **ProductCatalogReadModel**: Searchable product catalog with filters
+- **InventoryReadModel**: Real-time stock levels and alerts
+- **PaymentReadModel**: Payment history and transaction details
+- **SalesReportReadModel**: Analytics and business intelligence
 
-#### **Application Services**
-- **OrderApplicationService**: Orchestrates use cases
-- Coordinates between domain services and repositories
+#### **Command/Query Buses** (`internal/application/cqrs/`)
+- **CommandBus**: Routes commands to appropriate handlers
+- **QueryBus**: Routes queries to optimized read handlers  
+- **EventBus**: Publishes domain events to event handlers
 
-#### **DTOs (Data Transfer Objects)**
-- **OrderResponse**: API response models
-- **CreateOrderResponse**: Command response models
+### 5. **Enterprise Business Features**
 
-### 5. **Infrastructure Layer** (`internal/infrastructure/`)
+#### **Shopping Cart Management**
+- Session-based cart with automatic expiry (24 hours)
+- Real-time pricing updates and stock validation
+- Cart abandonment recovery and analytics
+- Business rules: max items per product (10), max total items (50)
+
+#### **Advanced Inventory Management**  
+- **Stock Reservations**: Temporary allocation during checkout (30 min TTL)
+- **Multi-level Alerts**: None → Low → Critical → Out of Stock
+- **Automated Replenishment**: Reorder point triggers and notifications
+- **Real-time Tracking**: Available, Reserved, and Total stock levels
+
+#### **Enterprise Payment Processing**
+- **Multi-method Support**: Credit/Debit cards, PayPal, Bank transfers, Digital wallets, Crypto
+- **Authorization/Capture Flow**: Two-phase payment processing
+- **Partial Refunds**: Business rule-based refund management
+- **Payment Method Storage**: Customer payment instrument management
+
+#### **Promotion Engine & Discounts**
+- **Flexible Discount Types**: Percentage, Fixed amount, Buy-X-Get-Y, Free shipping
+- **Advanced Conditions**: Minimum order amount, eligible products/categories, customer tiers
+- **Usage Limits**: Total uses and per-customer restrictions
+- **Coupon Management**: Individual codes with expiry and customer targeting
+
+### 6. **Advanced DDD Patterns Implemented**
+
+#### **Event Sourcing Foundations**
+- Domain events capture all business-significant state changes
+- Event-driven communication between bounded contexts
+- Audit trail for compliance and business analytics
+
+#### **CQRS Separation**
+- Commands modify state through domain aggregates
+- Queries use optimized read models for performance
+- Separate scaling and optimization strategies
+
+#### **Saga Pattern Ready**
+- Event-driven workflows for complex business processes
+- Compensation actions for distributed transaction management
+- Order processing workflow: Cart → Inventory → Payment → Fulfillment
+
+### 7. **Infrastructure & Persistence Layer**
 
 #### **Database**
-- PostgreSQL with proper migrations
-- Repository implementations using sqlx
+- PostgreSQL with optimized schemas for read/write separation
+- Repository implementations using sqlx for performance
+- Database migrations with proper indexing strategies
 
-#### **Configuration**
+#### **Configuration** 
 - Viper-based configuration management
-- Environment variable support
+- Environment-specific settings and secrets management
+- Docker Compose for development environment
 
 ## 🚀 Technology Stack
 
