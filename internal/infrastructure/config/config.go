@@ -39,6 +39,16 @@ func LoadConfig(path string) (*Config, error) {
 	viper.SetDefault("database.dbname", "orderdb")
 	viper.SetDefault("database.sslmode", "disable")
 
+	// Bind environment variables explicitly
+	viper.BindEnv("server.host", "SERVER_HOST")
+	viper.BindEnv("server.port", "SERVER_PORT")
+	viper.BindEnv("database.host", "DATABASE_HOST")
+	viper.BindEnv("database.port", "DATABASE_PORT")
+	viper.BindEnv("database.username", "DATABASE_USERNAME")
+	viper.BindEnv("database.password", "DATABASE_PASSWORD")
+	viper.BindEnv("database.dbname", "DATABASE_DBNAME")
+	viper.BindEnv("database.sslmode", "DATABASE_SSLMODE")
+
 	// Read environment variables
 	viper.AutomaticEnv()
 
